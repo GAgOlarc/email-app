@@ -23,7 +23,22 @@ module.exports = app => {
             }
         });
 
+        event.forEach(({ surveyId, email, choice }) => {
+            Survey.updateOne({
+                _id: surveyId,
+                recipients: {
+                    $elemMatch: { email: email, responded: false }
+                }
+            }, {
+                    $inc: { [choice]: 1 },
+                    $set: { 'recipients.$.responded': true },
+                    lastResponded: Date.now()
+                }).exec();
+        });
+
         console.log(event);
+
+        res.send({});
     });
 
     app.post('/api/surveys', requireLogin, requireCredits, async (req, res) => {
